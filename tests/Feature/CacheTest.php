@@ -9,7 +9,7 @@ class CacheTest extends TestCase
     use RefreshDatabase;
 
     /** @test */
-    public function user_profile_is_cached_after_first_retrieval()
+    public function getUser_is_cached_after_first_retrieval()
     {
         $user = User::factory()->create([
             'email' => 'john@example.com',
@@ -17,21 +17,21 @@ class CacheTest extends TestCase
 
         // Ensure cache is empty initially
         Cache::shouldReceive('get')
-             ->with('user-profile-' . $user->id)
+             ->with('getUser' . $user->id)
              ->once()
              ->andReturn(null);
 
         // Retrieve user profile (this should cache the result)
-        $response = $this->getJson("/api/user-profile/{$user->id}");
+        $response = $this->getJson("/api/getUser/{$user->id}");
         $response->assertStatus(200);
 
         // Now ensure the user profile is cached
         Cache::shouldReceive('put')
-             ->with('user-profile-' . $user->id, $user->toArray(), 600)
+             ->with('getUser' . $user->id, $user->toArray(), 600)
              ->once();
 
         // Re-run the request, the cache should now contain the user profile
-        $this->getJson("/api/user-profile/{$user->id}");
+        $this->getJson("/api/getUser/{$user->id}");
     }
 
     /** @test */
@@ -43,11 +43,11 @@ class CacheTest extends TestCase
 
         // Simulate the profile being cached
         Cache::shouldReceive('get')
-             ->with('user-profile-' . $user->id)
+             ->with('getUser-' . $user->id)
              ->andReturn($user->toArray());
 
         // The response should now return the cached profile
-        $response = $this->getJson("/api/user-profile/{$user->id}");
+        $response = $this->getJson("/api/getUser/{$user->id}");
         $response->assertStatus(200)
                  ->assertJson($user->toArray());
     }
